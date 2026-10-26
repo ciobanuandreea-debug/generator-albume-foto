@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhotoSphere - Galerie & Generator de Albume</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-dark: #1d4ed8;
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+            --radius: 12px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding-bottom: 50px;
+        }
+
+        /* Header & Navigation */
+        header {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1.2rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .logo i {
+            font-size: 1.8rem;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 4rem 1rem 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 2.8rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Controls Section */
+        .controls {
+            max-width: 1200px;
+            margin: 0 auto 2.5rem;
+            padding: 0 1.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            min-width: 280px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 20px 12px 45px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--card-bg);
+            color: var(--text-main);
+            font-size: 1rem;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .search-box input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-muted);
+            padding: 8px 18px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: var(--primary-color);
+            color: #fff;
+            border-color: var(--primary-color);
+        }
+
+        /* Gallery Grid */
+        .gallery-container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .photo-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            transition: var(--transition);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+        }
+
+        .photo-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+        }
+
+        .img-wrapper {
+            position: relative;
+            width: 100%;
+            height: 240px;
+            overflow: hidden;
+        }
+
+        .img-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .photo-card:hover .img-wrapper img {
+            transform: scale(1.08);
+        }
+
+        .card-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to top, rgba(15, 23, 42, 0.8), transparent);
+            opacity: 0;
+            transition: var(--transition);
+            display: flex;
+            align-items: flex-end;
+            padding: 1rem;
+        }
+
+        .photo-card:hover .card-overlay {
+            opacity: 1;
+        }
+
+        .card-info {
+            padding: 1rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card-info h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.3rem;
+            color: var(--text-main);
+        }
+
+        .card-info p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .tag {
+            display: inline-block;
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--accent);
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 8px;
+            align-self: flex-start;
+        }
+
+        /* Lightbox Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            max-width: 900px;
+            max-height: 80vh;
+            border-radius: var(--radius);
+            overflow: hidden;
+            position: relative;
+            background: var(--card-bg);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content img {
+            width: 100%;
+            max-height: 70vh;
+            object-fit: contain;
+            display: block;
+            background: #000;
+        }
+
+        .modal-details {
+            padding: 1.2rem 1.5rem;
+            background: var(--card-bg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            color: #fff;
+            font-size: 2rem;
+            cursor: pointer;
+            z-index: 1010;
+            background: rgba(0, 0, 0, 0.5);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .close-btn:hover {
+            background: var(--primary-color);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            margin-top: 4rem;
+            padding: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="logo">
+            <i class="fa-solid fa-camera-retro"></i>
+            <span>PhotoSphere</span>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>Generator & Galerie de Albume</h1>
+        <p>Explorează o colecție selectată de fotografii de înaltă rezoluție, organizate tematic pentru proiectele tale de design și inspirație vizuală.</p>
+    </section>
+
+    <!-- Controls Section -->
+    <section class="controls">
+        <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="searchInput" placeholder="Caută fotografii sau titluri...">
+        </div>
+        <div class="filter-buttons">
+            <button class="filter-btn active" data-filter="all">Toate</button>
+            <button class="filter-btn" data-filter="natura">Natură</button>
+            <button class="filter-btn" data-filter="arhitectura">Arhitectură</button>
+            <button class="filter-btn" data-filter="tehnologie">Tehnologie</button>
+            <button class="filter-btn" data-filter="calatorii">Călătorii</button>
+        </div>
+    </section>
+
+    <!-- Gallery Section -->
+    <main class="gallery-container">
+        <div class="gallery" id="galleryGrid">
+            <!-- Imaginile vor fi generate din JavaScript -->
+        </div>
+    </main>
+
+    <!-- Lightbox Modal -->
+    <div class="modal" id="imageModal">
+        <span class="close-btn" id="closeModal">&times;</span>
+        <div class="modal-content">
+            <img id="modalImg" src="" alt="Imagine mărită">
+            <div class="modal-details">
+                <div>
+                    <h3 id="modalTitle">Titlu Imagine</h3>
+                    <p id="modalDesc" style="color: var(--text-muted); font-size: 0.9rem;">Descriere foto</p>
+                </div>
+                <span class="tag" id="modalTag">Categorie</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2026 Generator de Albume Foto. Proiect Elaborat pentru Dezvoltarea Software în Echipă.</p>
+    </footer>
+
+    <!-- JavaScript logic -->
+    <script>
+        // Colecția de date pentru imagini
+        const photos = [
+            {
+                id: 1,
+                title: "Muniții și Ceață",
+                category: "natura",
+                desc: "Răsărit de soare spectaculos peste piscurile muntoase acoperite de ceață.",
+                url: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=800&q=80"
+            },
+            {
+                id: 2,
+                title: "Zgârie-nori Moderni",
+                category: "arhitectura",
+                desc: "Perspectivă dramatică a unei clădiri moderne din sticlă și oțel.",
+                url: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80"
+            },
+            {
+                id: 3,
+                title: "Workspace Minimalist",
+                category: "tehnologie",
+                desc: "Birou de lucru modern cu laptop, căști și iluminare ambientală.",
+                url: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80"
+            },
+            {
+                id: 4,
+                title: "Plajă la Apus",
+                category: "calatorii",
+                desc: "Valuri line pe o plajă tropicală în timpul unui apus auriu.",
+                url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80"
+            },
+            {
+                id: 5,
+                title: "Pădure Toamna",
+                category: "natura",
+                desc: "Alee acoperită de frunze uscate într-o pădure caldă de toamnă.",
+                url: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=800&q=80"
+            },
+            {
+                id: 6,
+                title: "Podul Istoric",
+                category: "arhitectura",
+                desc: "Arhitectură clasică a unui pod iluminat pe timpul nopții.",
+                url: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80"
+            },
+            {
+                id: 7,
+                title: "Circuit Integrat & AI",
+                category: "tehnologie",
+                desc: "Detalii macro ale componentelor electronice dintr-un procesor modern.",
+                url: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80"
+            },
+            {
+                id: 8,
+                title: "Aventură pe Drum",
+                category: "calatorii",
+                desc: "Șosea șerpuită prin văi și munți impresionanți.",
+                url: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=800&q=80"
+            }
+        ];
+
+        const galleryGrid = document.getElementById('galleryGrid');
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const searchInput = document.getElementById('searchInput');
+        
+        const modal = document.getElementById('imageModal');
+        const modalImg = document.getElementById('modalImg');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalDesc = document.getElementById('modalDesc');
+        const modalTag = document.getElementById('modalTag');
+        const closeModal = document.getElementById('closeModal');
+
+        // Randare Galerie
+        function renderGallery(items) {
+            galleryGrid.innerHTML = '';
+            if (items.length === 0) {
+                galleryGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">Nu au fost găsite imagini conform căutării.</p>';
+                return;
+            }
+
+            items.forEach(photo => {
+                const card = document.createElement('div');
+                card.className = 'photo-card';
+                card.onclick = () => openModal(photo);
+
+                card.innerHTML = `
+                    <div class="img-wrapper">
+                        <img src="${photo.url}" alt="${photo.title}" loading="lazy">
+                        <div class="card-overlay">
+                            <span style="color: #fff; font-size: 0.9rem;"><i class="fa-solid fa-expand"></i> Click pentru mărire</span>
+                        </div>
+                    </div>
+                    <div class="card-info">
+                        <div>
+                            <h3>${photo.title}</h3>
+                            <p>${photo.desc}</p>
+                        </div>
+                        <span class="tag">${photo.category.toUpperCase()}</span>
+                    </div>
+                `;
+                galleryGrid.appendChild(card);
+            });
+        }
+
+        // Filtrare după Categorie
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                const filter = btn.getAttribute('data-filter');
+                filterPhotos();
+            });
+        });
+
+        // Filtrare după Căutare & Categorie
+        function filterPhotos() {
+            const activeFilter = document.querySelector('.filter-btn.active').getAttribute('data-filter');
+            const searchTerm = searchInput.value.toLowerCase();
+
+            const filtered = photos.filter(photo => {
+                const matchesCategory = activeFilter === 'all' || photo.category === activeFilter;
+                const matchesSearch = photo.title.toLowerCase().includes(searchTerm) || 
+                                      photo.desc.toLowerCase().includes(searchTerm);
+                return matchesCategory && matchesSearch;
+            });
+
+            renderGallery(filtered);
+        }
+
+        searchInput.addEventListener('input', filterPhotos);
+
+        // Funcționalitate Modal (Lightbox)
+        function openModal(photo) {
+            modalImg.src = photo.url;
+            modalTitle.textContent = photo.title;
+            modalDesc.textContent = photo.desc;
+            modalTag.textContent = photo.category.toUpperCase();
+            modal.classList.add('show');
+        }
+
+        closeModal.onclick = () => modal.classList.remove('show');
+        
+        window.onclick = (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('show');
+            }
+        };
+
+        // Inițializare
+        renderGallery(photos);
+    </script>
+</body>
+</html>
